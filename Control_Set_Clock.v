@@ -7,7 +7,7 @@
 * Date:
 *	25/07/2020
 ******************************************************************/
-module Control
+module Control_Set_Clock
 (
 	// Input Ports
 	input clk,
@@ -58,13 +58,13 @@ end//end always
 always @(*) begin
 	case(state)
 		INIT: 
-				Shot_reg = 1'b1;
+				Shot_reg = 1'b0;
 		IDLE: 
 				Shot_reg = 1'b0;
 		SET: 
 				Shot_reg = 1'b1;
 		READY: 
-				Shot_reg = 1'b0;
+				Shot_reg = 1'b1;
 				
 	default: 		
 				Shot_reg = 1'b0;

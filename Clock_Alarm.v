@@ -6,6 +6,7 @@ module Clock_Alarm
 //    input Set_Alarm,
 //    input Alarm_Off,
 	 input MIN,
+	 input HR,
 	 input enable,
    
 //    output Alarm_Out,
@@ -19,36 +20,44 @@ module Clock_Alarm
 
 localparam SECONDS = 10;
 localparam MINUTES = 6;
-localparam HOURS = 3;
+localparam HOURS = 2;
 localparam WORD_LENGTH = 4;
 
+wire [3:0] counter_m_u_wire;
+wire [2:0] counter_m_t_wire;
+wire [3:0] counter_h_u_wire;
+wire [1:0] counter_h_t_wire;
+wire [3:0] set_m_u_clk_wire;
+wire [2:0] set_m_t_clk_wire;
+wire [3:0] set_h_u_clk_wire;
+wire [1:0] set_h_t_clk_wire;
+wire [3:0] set_m_u_clk;
+wire [2:0] set_m_t_clk;
+wire [3:0] set_h_u_clk;
+wire [1:0] set_h_t_clk;
 wire [3:0] counter_s_u;
-wire [3:0] set_s_u_clk;
-wire [3:0] set_s_u_clk_wire;
-wire [3:0] counter_s_u_wire;
 wire [2:0] counter_s_t;
-wire [2:0] set_s_t_clk;
-wire [2:0] set_s_t_clk_wire;
-wire [2:0] counter_s_t_wire;
 wire [3:0] counter_m_u;
 wire [2:0] counter_m_t;
-wire [1:0] counter_h_u;
+wire [3:0] counter_h_u;
 wire [1:0] counter_h_t;
 wire flag_m_u_wire;
 wire flag_m_t_wire;
+wire flag_h_u_wire;
 wire s_u_wire;
 wire s_t_wire;
 wire m_u_wire;
 wire m_t_wire;
 wire h_u_wire;
 wire h_t_wire;
-wire clock_signal;
-wire shot_wire;
-wire set_min;
-wire Set_Clock_wire;
 
+wire shot_wire;
+wire shot_M_wire;
+wire shot_H_wire;
+
+wire clock_signal;
+wire Set_Clock_wire;
 assign Set_Clock_wire = ~Set_Clock;
-assign set_min = MIN;
 
 Clock_Divider
 #(
@@ -68,7 +77,7 @@ Clock_Hz
 ;
 
 Control
-Contro_Clock
+Control_Clock
 (
 	// Input Ports
 	.clk(clock_signal),
@@ -80,106 +89,7 @@ Contro_Clock
 )
 ;
 
-Counter_With_Parameter
-#(
-	// Parameter Declarations
-	.MAXIMUM_VALUE(SECONDS)
-)
-Increase_Minutes_U
-(
-	// Input Ports
-	.clk(clock_signal),
-	.reset(reset),
-	.enable(MIN),
-	
-	// Output Ports
-	.flag(flag_m_u_wire),
-	.counter(counter_s_u_wire)
-)
-;
-
-Multiplexer2to1
-#(
-	.N_BITS(SECONDS)
-)
-Mux_Set_Clk_M_U
-(
-	// Input Ports
-	.Selector(Set_Clock_wire),
-	.Data_0(5),
-	.Data_1(counter_s_u_wire),
-	
-	// Output Ports
-	.Mux_Output(set_s_u_clk_wire)
-
-)
-;
-/*
-Register_With_Enable
-#(
-	.WORD_LENGTH(SECONDS)
-)
-Reg_Set_Clk_M_U
-(
-	// Input Ports
-	.clk(clock_signal),
-	.reset(reset),
-	.enable(shot_wire),
-	.Data_Input(set_s_u_clk),
-
-	// Output Ports
-	.Data_Output(set_s_u_clk_wire)
-);
-*/
-Counter_With_Parameter
-#(
-	// Parameter Declarations
-	.MAXIMUM_VALUE(MINUTES)
-)
-Increase_Minutes_T
-(
-	// Input Ports
-	.clk(clock_signal),
-	.reset(reset),
-	.enable(MIN & flag_m_u_wire),
-	
-	// Output Ports
-	.flag(),
-	.counter(counter_s_t_wire)
-);
-
-Multiplexer2to1
-#(
-	.N_BITS(MINUTES)
-)
-Mux_Set_Clk_M_T
-(
-	// Input Ports
-	.Selector(Set_Clock_wire),
-	.Data_0(3),
-	.Data_1(counter_s_t_wire),
-	
-	// Output Ports
-	.Mux_Output(set_s_t_clk_wire)
-
-);
-/*
-Register_With_Enable
-#(
-	.WORD_LENGTH(MINUTES)
-)
-Reg_Set_Clk_M_T
-(
-	// Input Ports
-	.clk(clock_signal),
-	.reset(reset),
-	.enable(shot_wire),
-	.Data_Input(set_s_t_clk),
-
-	// Output Ports
-	.Data_Output(set_s_t_clk_wire)
-);
-*/
+/*********************************************************************************************/
 Counter_A_D
 #(
 	// Parameter Declarations
@@ -219,7 +129,90 @@ Counter_Seconds_Tens
 	.counter(counter_s_t)
 )
 ;
+/*********************************************************************************************/
+Control_Set_Clock
+Control_Set_Minutes
+(
+	// Input Ports
+	.clk(clock_signal),
+	.reset(reset),
+	.Start(Set_Clock_wire & MIN),
 
+	// Output Ports
+	.Shot(shot_M_wire)
+)
+;
+
+Counter_With_Parameter
+#(
+	// Parameter Declarations
+	.MAXIMUM_VALUE(SECONDS)
+)
+Increase_Minutes_U
+(
+	// Input Ports
+	.clk(clock_signal),
+	.reset(reset),
+	.enable(MIN),
+	
+	// Output Ports
+	.flag(flag_m_u_wire),
+	.counter(counter_m_u_wire)
+)
+;
+
+Multiplexer2to1
+#(
+	.N_BITS(SECONDS)
+)
+Mux_Set_Clk_M_U
+(
+	// Input Ports
+	.Selector(shot_M_wire),
+	.Data_0(5),
+	.Data_1(counter_m_u_wire),
+	
+	// Output Ports
+	.Mux_Output(set_m_u_clk_wire)
+
+)
+;
+
+Counter_With_Parameter
+#(
+	// Parameter Declarations
+	.MAXIMUM_VALUE(MINUTES)
+)
+Increase_Minutes_T
+(
+	// Input Ports
+	.clk(clock_signal),
+	.reset(reset),
+	.enable(MIN & flag_m_u_wire),
+	
+	// Output Ports
+	.flag(),
+	.counter(counter_m_t_wire)
+)
+;
+
+Multiplexer2to1
+#(
+	.N_BITS(MINUTES)
+)
+Mux_Set_Clk_M_T
+(
+	// Input Ports
+	.Selector(shot_M_wire),
+	.Data_0(3),
+	.Data_1(counter_m_t_wire),
+	
+	// Output Ports
+	.Mux_Output(set_m_t_clk_wire)
+
+)
+;
+/*********************************************************************************************/
 Counter_A_D
 #(
 	// Parameter Declarations
@@ -232,7 +225,7 @@ Counter_Minutes_Units
 	.reset(reset),
 	.enable(enable & s_u_wire & s_t_wire),
 	.start(shot_wire),
-	.set_counter(set_s_u_clk_wire),
+	.set_counter(set_m_u_clk_wire),
 	
 	// Output Ports
 	.flag(m_u_wire),
@@ -252,18 +245,101 @@ Counter_Minutes_Tens
 	.reset(reset),
 	.enable(enable & s_u_wire & s_t_wire & m_u_wire),
 	.start(shot_wire),
-	.set_counter(set_s_t_clk_wire),
+	.set_counter(set_m_t_clk_wire),
 	
 	// Output Ports
 	.flag(m_t_wire),
 	.counter(counter_m_t)
 )
 ;
+/*********************************************************************************************/
+Control_Set_Clock
+Control_Set_Hours
+(
+	// Input Ports
+	.clk(clock_signal),
+	.reset(reset),
+	.Start(Set_Clock_wire & HR),
 
+	// Output Ports
+	.Shot(shot_H_wire)
+)
+;
+
+Counter_With_Parameter
+#(
+	// Parameter Declarations
+	.MAXIMUM_VALUE(SECONDS)
+)
+Increase_Hours_U
+(
+	// Input Ports
+	.clk(clock_signal),
+	.reset(reset),
+	.enable(HR),
+	
+	// Output Ports
+	.flag(flag_h_u_wire),
+	.counter(counter_h_u_wire)
+)
+;
+
+Multiplexer2to1
+#(
+	.N_BITS(SECONDS)
+)
+Mux_Set_Clk_H_U
+(
+	// Input Ports
+	.Selector(shot_H_wire),
+	.Data_0(2),
+	.Data_1(counter_h_u_wire),
+	
+	// Output Ports
+	.Mux_Output(set_h_u_clk_wire)
+
+)
+;
+
+Counter_With_Parameter
+#(
+	// Parameter Declarations
+	.MAXIMUM_VALUE(HOURS)
+)
+Increase_Hours_T
+(
+	// Input Ports
+	.clk(clock_signal),
+	.reset(reset),
+	.enable(HR & flag_h_u_wire),
+	
+	// Output Ports
+	.flag(),
+	.counter(counter_h_t_wire)
+)
+;
+
+Multiplexer2to1
+#(
+	.N_BITS(HOURS)
+)
+Mux_Set_Clk_H_T
+(
+	// Input Ports
+	.Selector(shot_H_wire),
+	.Data_0(1),
+	.Data_1(counter_h_t_wire),
+	
+	// Output Ports
+	.Mux_Output(set_h_t_clk_wire)
+
+)
+;
+/*********************************************************************************************/
 Counter_A_D
 #(
 	// Parameter Declarations
-	.MAXIMUM_VALUE(WORD_LENGTH)
+	.MAXIMUM_VALUE(SECONDS)
 )
 Counter_Hours_Units
 (
@@ -271,7 +347,7 @@ Counter_Hours_Units
 	.clk(clock_signal),
 	.reset(reset),
 	.start(shot_wire),
-	.set_counter(2),
+	.set_counter(set_h_u_clk_wire),
 	.enable(enable & s_u_wire & s_t_wire & m_u_wire & m_t_wire),
 	
 	// Output Ports
@@ -291,7 +367,7 @@ Counter_Hour_Tens
 	.clk(clock_signal),
 	.reset(reset),
 	.start(shot_wire),
-	.set_counter(1),
+	.set_counter(set_h_t_clk_wire),
 	.enable(enable & s_u_wire & s_t_wire & m_u_wire & m_t_wire & h_u_wire),
 	
 	// Output Ports
