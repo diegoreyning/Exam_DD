@@ -1,19 +1,12 @@
-/******************************************************************* 
-* Name:
-*	One_Shot.sv
-* Description:
-* 	This module realize a shot
-* Inputs:
-*	clk,reset,Start
-* Outputs:
-* 	Shot
-* Versión:  
+/******************************************************************
+* Description
+*	This module is the control of the system
 *	1.0
-* Author: 
-*	Felipe Garcia & Diego Reyna
-* Fecha: 
-*	22/02/2018 
-*********************************************************************/
+* Author:
+*	Diego Eduardo Reyna Cruz
+* Date:
+*	25/07/2020
+******************************************************************/
 module Control
 (
 	// Input Ports
@@ -51,15 +44,15 @@ begin
 				
 		IDLE:
 			if(Not_Start == 1'b1)
-				state <= READY;
-				
-		SET:
-			if(Not_Start == 1'b1)
-				state <= READY;
+				state <= SET;
 		
-		READY:
+		SET:
 			if (Not_Start == 1'b0)
-				state <= SET;	
+				state <= READY;	
+				
+		READY:
+			if(Not_Start == 1'b1)
+				state <= SET;
 				
 		default:
 				state <= INIT;
@@ -76,12 +69,11 @@ always @(*) begin
 				Shot_reg = 1'b1;
 		IDLE: 
 				Shot_reg = 1'b0;
-
 		SET: 
-				Shot_reg = 1'b0;
-
-		READY: 
 				Shot_reg = 1'b1;
+		READY: 
+				Shot_reg = 1'b0;
+				
 	default: 		
 				Shot_reg = 1'b0;
 				

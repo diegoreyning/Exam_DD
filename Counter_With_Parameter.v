@@ -31,22 +31,21 @@ reg [NBITS-1 : 0] counter_reg;
 
 /*********************************************************************************************/
 
-	always@(posedge clk or negedge reset) begin
-		if (reset == 1'b0)
-			counter_reg <= {NBITS{1'b0}};
-		else begin
-				if(enable == 1'b1) begin
-					if(counter_reg == MAXIMUM_VALUE - 1)
-						counter_reg <= 1'b0;
-					else
-						counter_reg <= counter_reg + 1'b1;
-						
-				end
-		end
+always @(posedge clk or negedge reset) begin
+	if (reset == 1'b0)
+		counter_reg <= {NBITS{1'b0}};
+	else begin
+			if(enable == 1'b1) begin
+				if(counter_reg == MAXIMUM_VALUE - 1)
+					counter_reg <= 1'b0;
+				else
+					counter_reg <= counter_reg + 1'b1;					
+			end
 	end
+end
 
 
-always@(counter_reg)
+always @(counter_reg)
 	if(counter_reg == MAXIMUM_VALUE - 1)
 		MaxValue_Bit = 1;
 	else
